@@ -1,0 +1,2 @@
+# OTA release list - one image per line, appended by tools/release.sh
+# <version> <file> <size-bytes> <sha256>

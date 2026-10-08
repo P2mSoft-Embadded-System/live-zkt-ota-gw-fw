@@ -2,4 +2,4 @@
 # <version> <file> <size-bytes> <sha256>
 1.0.0 firmware/firmware-v1.0.0.bin 961568 2ee9da5bc4256ec00afef9b242ab59546420a9960511ff2fae68b68838f27512
 1.0.1 firmware/firmware-v1.0.1.bin 961568 49efd0b538d1508499d24bf8d350ab93f3810fc360def9abab1f5e7971fb82f6
-
+1.0.2 firmware/firmware-v1.0.2.bin 961808 2694b839b3498d6f9adf3f1b52ffe1a02de15ac01306ca1b59bf72a00f3beb30

@@ -1,2 +1,3 @@
 # OTA release list - one image per line, appended by tools/release.sh
 # <version> <file> <size-bytes> <sha256>
+1.0.0 firmware/firmware-v1.0.0.bin 961568 2ee9da5bc4256ec00afef9b242ab59546420a9960511ff2fae68b68838f27512

@@ -15,7 +15,7 @@ automatically.
 | `versions.txt` | Release list read by the device |
 | `firmware/` | Published `.bin` images |
 | `tools/release.sh` | Build + publish a release |
-| `tools/serial.py` | Serial logger / command sender |
+| `tools/monitor.py` | Serial logger / command sender |
 
 ## versions.txt
 
@@ -33,7 +33,7 @@ version it is running. Order of lines does not matter.
 
 ```sh
 FW_VERSION=1.0.0 pio run -t upload
-tools/serial.py "ssid <wifi name>" "pass <wifi password>" reboot
+tools/monitor.py "ssid <wifi name>" "pass <wifi password>" reboot
 ```
 
 WiFi credentials live in NVS on the device. They are never compiled into the

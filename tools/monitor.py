@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Log the device's serial output, optionally sending commands first.
 
-  tools/serial.py [-p PORT] [-t SECONDS] [-u REGEX] [--no-reset] [command ...]
+  tools/monitor.py [-p PORT] [-t SECONDS] [-u REGEX] [--no-reset] [command ...]
 
   -t  stop after this many seconds (default 60)
   -u  stop early once a line matches this regex
   --no-reset  do not pulse EN when opening the port
-Each command is sent as one line, e.g.:  tools/serial.py "ssid MyNet" "pass secret" reboot
+Each command is sent as one line, e.g.:  tools/monitor.py "ssid MyNet" "pass secret" reboot
 """
 import argparse
+import glob
 import re
 import sys
 import time
@@ -16,7 +17,8 @@ import time
 import serial
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-p", "--port", default="/dev/ttyUSB1")
+ports = sorted(glob.glob("/dev/ttyUSB*") + glob.glob("/dev/ttyACM*"))
+ap.add_argument("-p", "--port", default=ports[0] if ports else "/dev/ttyUSB0")
 ap.add_argument("-t", "--timeout", type=float, default=60)
 ap.add_argument("-u", "--until")
 ap.add_argument("--no-reset", action="store_true")

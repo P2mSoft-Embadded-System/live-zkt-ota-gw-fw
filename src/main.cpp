@@ -75,6 +75,11 @@ static const char *otaStateName(esp_ota_img_states_t s) {
   }
 }
 
+// getString() logs an error for a missing key; this stays quiet.
+static String prefStr(const char *key) {
+  return prefs.isKey(key) ? prefs.getString(key, "") : String();
+}
+
 static void printStatus() {
   const esp_partition_t *running = esp_ota_get_running_partition();
   esp_ota_img_states_t state = ESP_OTA_IMG_UNDEFINED;
@@ -84,8 +89,8 @@ static void printStatus() {
                 WiFi.isConnected() ? "up" : "down",
                 WiFi.localIP().toString().c_str());
   Serial.printf("[status] pending='%s' bad='%s' attempts=%u\n",
-                prefs.getString("pend", "").c_str(),
-                prefs.getString("bad", "").c_str(),
+                prefStr("pend").c_str(),
+                prefStr("bad").c_str(),
                 prefs.getUChar("tries", 0));
 }
 
@@ -94,7 +99,7 @@ static void printStatus() {
 // Compares the version we *tried* to install (saved before the reboot) with
 // what is actually running, so a rolled-back release is not retried forever.
 static void reconcilePendingUpdate() {
-  String pend = prefs.getString("pend", "");
+  String pend = prefStr("pend");
   if (pend.isEmpty()) return;
 
   if (pend == FW_VERSION) {
@@ -133,14 +138,14 @@ static void rollbackNow(const char *why) {
 // ------------------------------------------------------------------- WiFi --
 
 static bool connectWifi() {
-  String ssid = prefs.getString("ssid", "");
+  String ssid = prefStr("ssid");
   if (ssid.isEmpty()) {
     Serial.println("[wifi] no credentials. Send:  ssid <name>  /  pass <password>  /  reboot");
     return false;
   }
   Serial.printf("[wifi] connecting to '%s'", ssid.c_str());
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid.c_str(), prefs.getString("pass", "").c_str());
+  WiFi.begin(ssid.c_str(), prefStr("pass").c_str());
   uint32_t start = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - start < WIFI_TIMEOUT_MS) {
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
@@ -309,7 +314,7 @@ static void checkForUpdate(const Release &latest) {
     Serial.printf("[ota] up to date (running %s)\n", FW_VERSION);
     return;
   }
-  if (prefs.getString("bad", "") == latest.version) {
+  if (prefStr("bad") == latest.version) {
     Serial.printf("[ota] %s is blacklisted after failed installs, staying on %s\n", latest.version, FW_VERSION);
     return;
   }

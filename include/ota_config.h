@@ -15,9 +15,11 @@
 
 // ---- Timing --------------------------------------------------------------
 #define WIFI_TIMEOUT_MS      30000   // per boot, to get an IP
-#define HTTP_TIMEOUT_MS      15000   // connect / read timeout
+#define HTTP_TIMEOUT_MS      10000   // connect / read timeout
+#define MANIFEST_ATTEMPTS    5       // tries per boot before giving up on versions.txt
+#define MANIFEST_RETRY_MS    3000    // pause between tries
 #define DOWNLOAD_STALL_MS    20000   // abort download if no bytes for this long
-#define SELFTEST_WDT_S       120     // a new image that hangs is reset -> rolled back
+#define SELFTEST_WDT_S       60      // a new image that hangs is reset -> rolled back (fed between manifest tries)
 
 // A release that fails to validate this many times is never tried again.
 #define MAX_UPDATE_ATTEMPTS  2

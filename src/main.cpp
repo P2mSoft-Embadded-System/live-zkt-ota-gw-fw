@@ -127,12 +127,26 @@ static void markValid() {
   Serial.printf("[ota] self-test passed, %s marked VALID\n", FW_VERSION);
 }
 
+// Leave the AP cleanly first: after an abrupt reset the AP can keep the stale
+// association and drop traffic for the first seconds of the next boot.
+static void shutdownWifi() {
+  WiFi.disconnect(true, false);
+  delay(300);
+}
+
+static void restartClean() {
+  Serial.flush();
+  shutdownWifi();
+  ESP.restart();
+}
+
 static void rollbackNow(const char *why) {
   Serial.printf("[ota] self-test FAILED (%s) -> rolling back\n", why);
   Serial.flush();
+  shutdownWifi();
   esp_ota_mark_app_invalid_rollback_and_reboot();  // does not return on success
   Serial.println("[ota] rollback not possible, restarting");
-  ESP.restart();
+  restartClean();
 }
 
 // ------------------------------------------------------------------- WiFi --
@@ -214,6 +228,20 @@ static bool fetchLatestRelease(Release &latest, bool &found) {
   }
   Serial.printf("[ota] manifest: %d release(s), latest=%s\n", count, found ? latest.version : "none");
   return true;
+}
+
+// One failed request must not condemn a good image (or skip an update), so the
+// manifest fetch is retried, reconnecting WiFi if it dropped in between.
+static bool fetchLatestReleaseWithRetry(Release &latest, bool &found) {
+  for (int attempt = 1; attempt <= MANIFEST_ATTEMPTS; attempt++) {
+    if (pendingVerify) esp_task_wdt_reset();
+    if ((WiFi.isConnected() || connectWifi()) && fetchLatestRelease(latest, found)) return true;
+    if (attempt < MANIFEST_ATTEMPTS) {
+      Serial.printf("[ota] manifest attempt %d/%d failed, retrying\n", attempt, MANIFEST_ATTEMPTS);
+      delay(MANIFEST_RETRY_MS);
+    }
+  }
+  return false;
 }
 
 // ---------------------------------------------------------------- install --
@@ -328,8 +356,7 @@ static void checkForUpdate(const Release &latest) {
   prefs.putString("pend", latest.version);
   prefs.putUChar("tries", prefs.getUChar("tries", 0) + 1);
   Serial.printf("[ota] rebooting into %s\n", latest.version);
-  Serial.flush();
-  ESP.restart();
+  restartClean();
 }
 
 // ----------------------------------------------------------------- serial --
@@ -351,8 +378,7 @@ static void handleSerial() {
       Serial.println("[cmd] password saved");
     } else if (line == "reboot") {
       Serial.println("[cmd] rebooting");
-      Serial.flush();
-      ESP.restart();
+      restartClean();
     } else if (line == "status") {
       printStatus();
     } else if (line == "forget") {  // allow a blacklisted release to be retried
@@ -402,7 +428,7 @@ void setup() {
   bool online = connectWifi();
   Release latest;
   bool found = false;
-  bool manifestOk = online && fetchLatestRelease(latest, found);
+  bool manifestOk = online && fetchLatestReleaseWithRetry(latest, found);
 
   if (pendingVerify) {
     // Self-test: an image that cannot reach the update server could never be

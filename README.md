@@ -54,10 +54,11 @@ GitHub's CDN caches `versions.txt` for up to 5 minutes.
 1. **Download** – HTTPS with pinned root CAs; size and SHA-256 must match
    `versions.txt`, otherwise nothing is switched and the old image keeps running.
 2. **First boot of the new image** – the bootloader marks it `PENDING_VERIFY`.
-3. **Self-test** – the new image must connect to WiFi and fetch `versions.txt`.
+3. **Self-test** – the new image must connect to WiFi and fetch `versions.txt`
+   (up to 5 tries, so one dropped connection does not condemn a good image).
    Pass: it marks itself valid. Fail: it rolls back and reboots.
 4. **Crash or hang before the self-test passes** – any reset while still
-   `PENDING_VERIFY` makes the bootloader boot the previous image. A 120 s
+   `PENDING_VERIFY` makes the bootloader boot the previous image. A 60 s
    watchdog covers hangs.
 5. **No update loop** – a release that fails to validate twice is blacklisted on
    that device and skipped until a higher version is published. Send `forget`
